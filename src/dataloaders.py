@@ -21,7 +21,7 @@ class BlendDataset(Dataset):
     def __init__(self, path, transform=None, test_run=False):
 
         files = os.listdir(path)
-        self.paths = [os.path.join(path, file) for file in files]
+        self.paths = [os.path.join(path, file) for file in files if file.endswith('.npz')]
         self.transform = transform
         try:
             self.file_batch = np.load(self.paths[0])['imgs'].shape[0]
@@ -36,14 +36,15 @@ class BlendDataset(Dataset):
         return len(self.paths)
 
     def __getitem__(self, idx):
-        data = np.load(self.paths[idx])
+        data = np.load(self.paths[idx], allow_pickle=True)
         blend = data['imgs']
         num = data['nums']
+        # apply transformations
+        if self.transform:
+            blend = self.transform(blend)
         # convert to tensor
         blend = torch.from_numpy(blend).float()
         num = torch.from_numpy(num) - 1  # shift labels by 1 (because of CELoss convention)
-        if self.transform:
-            blend = self.transform(blend)
         return blend, num
 
 

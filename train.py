@@ -27,7 +27,6 @@ def train(model, optimizer, criterion, train_loader, valid_loader,
     # logging
     day, time = get_time()
     save_dir = os.path.join(log_dir, model.name, day, time)
-    save_path = os.path.join(save_dir, 'checkpoint.pt')
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     tb_writer = SummaryWriter(log_dir=save_dir)
@@ -78,11 +77,11 @@ def train(model, optimizer, criterion, train_loader, valid_loader,
         f1_macro = f1_score(predictions, targets, average='macro')
         confusion_fig = draw_confusion(targets, predictions, model.num_cls)
         # Tensorboards Logging
-        tb_writer.add_scalar('Train Loss', train_loss, e)
-        tb_writer.add_scalar('Valid Loss', valid_loss, e)
-        tb_writer.add_scalar('Valid ACC', acc, e)
-        tb_writer.add_scalar('Valid F1', f1_macro, e)
-        tb_writer.add_figure('Confusion', confusion_fig)
+        tb_writer.add_scalar('Train Loss', train_loss, e+1)
+        tb_writer.add_scalar('Valid Loss', valid_loss, e+1)
+        tb_writer.add_scalar('Valid ACC', acc, e+1)
+        tb_writer.add_scalar('Valid F1', f1_macro, e+1)
+        tb_writer.add_figure('Confusion', confusion_fig, e+1)
 
         # print values
         print(f'Epoch: {e + 1} TrainLoss: {train_loss:.3f} ValidLoss: {valid_loss:.3f} ACC: {acc:.3f} F1_MACRO: {f1_macro}')
@@ -90,23 +89,22 @@ def train(model, optimizer, criterion, train_loader, valid_loader,
         ######################
         #   save the model   #
         ######################
-        if valid_loss <= valid_loss_min:
+        if valid_loss <= valid_loss_min or (e+1) % 10 == 0:
             torch.save({
-                'epoch': e,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'valid_loss_min': valid_loss
-            }, save_path)
+            }, os.path.join(save_dir, f'e_{e+1}_checkpoint.pt'))
             valid_loss_min = valid_loss
 
 
 def main():
-    from src.resnet import ResNet18
+    from src.resnet import ResNet
     from torch import nn
     from torch.optim import Adam
 
     # set up the model
-    model = ResNet18(TRAIN.in_ch, TRAIN.num_cls).to(TRAIN.device)
+    model = ResNet(TRAIN.in_ch, TRAIN.num_cls, TRAIN.num_layers).to(TRAIN.device)
     optimizer = Adam(model.parameters(), lr=TRAIN.learning_rate)
     criterion = nn.CrossEntropyLoss()
 
@@ -117,8 +115,7 @@ def main():
         TRAIN.train_data_path,
         TRAIN.test_data_path,
         TRAIN.batch_size,
-        transform,
-        test_run=True
+        transform
     )
 
     # train the model

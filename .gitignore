@@ -1,10 +1,13 @@
 # custom added
-.dea/
+jobs/
+*.sbatch
+*.sh
 .DS_Store
 MessingAround.ipynb
 .idea/
 data/NumberedGalaxyBlends/
 data/OneDegSq.fits
+logs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
