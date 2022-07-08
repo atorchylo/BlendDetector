@@ -21,7 +21,7 @@ class ResNet(nn.Module):
 
         self.resnet.conv1 = nn.Conv2d(in_ch, self.resnet.conv1.out_channels, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, num_cls)
-        self.name = "Multi-class_ResNet18"
+        self.name = "Multi-class_ResNet"
         self.num_cls = num_cls
 
     def forward(self, x):

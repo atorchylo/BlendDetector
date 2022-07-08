@@ -44,7 +44,7 @@ def save_data(gen):
     sample_size = {'train': DATA.train_batches, 'valid': DATA.valid_batches}
     for key in sample_size:
         # create folders
-        save_path = os.path.join(DATA.dataset_location, 'NumberedGalaxyBlends', key)
+        save_path = os.path.join(DATA.dataset_location, DATA.dataset_name, key)
         if not os.path.exists(save_path):
             os.makedirs(save_path)
 

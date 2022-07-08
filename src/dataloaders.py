@@ -9,7 +9,7 @@ from torch.utils.data import Dataset, DataLoader
 class GetLuptitudes():
     """Transform for SCARLET image normalization"""
 
-    def __init__(self, Q, S):
+    def __init__(self, Q = 0.5, S = 2731):
         self.Q = Q
         self.S = S
 
@@ -17,9 +17,12 @@ class GetLuptitudes():
         imgs = np.arcsinh(self.Q * imgs / self.S) / self.Q
         return imgs
 
-class ChannelNormalized():
 
-    pass
+class ChannelNormalized():
+    """Normalize each channel in the image"""
+    def __call__(self, imgs):
+        imgs /= imgs.sum(axis=(2, 3), keepdims=True)
+        return imgs
 
 
 class GetColors():
@@ -29,7 +32,7 @@ class GetColors():
     You can pass custom_permuataions, which is an iterable of tuples of indices that
     will be used for color calculations.
     """
-    def __init__(self, num_ch, custom_permutaions=None):
+    def __init__(self, num_ch=6, custom_permutaions=None):
         self.num_ch = num_ch
         if custom_permutaions is None:
             self.permutations = itertools.combinations(range(self.num_ch), 2)
@@ -38,10 +41,16 @@ class GetColors():
         colors = []
         for (i, j) in self.permutations:
             color = imgs[:, i, :, :] - imgs[:, j, :, :]
-            color = color.unsqueeze(1)
+            color = np.expand_dims(color, 1)
             colors.append(color)
-        colors = torch.cat(colors, axis=1)
-        return colors
+        return np.concatenate(colors, axis=1)
+
+
+class ConcatenateWithColors():
+    def __call__(self, imgs):
+        norm = ChannelNormalized()(imgs)
+        clrs = GetColors()(norm)
+        return np.concatenate([imgs, clrs], axis=1)
 
 
 class BlendDataset(Dataset):

@@ -89,34 +89,47 @@ def train(model, optimizer, criterion, train_loader, valid_loader,
         ######################
         #   save the model   #
         ######################
-        if valid_loss <= valid_loss_min or (e+1) % 10 == 0:
+        if valid_loss <= valid_loss_min:
+            torch.save({
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'valid_loss_min': valid_loss
+            }, os.path.join(save_dir, 'valid_min_checkpoint.pt'))
+            valid_loss_min = valid_loss
+
+        if (e+1) % 10 == 0:
             torch.save({
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'valid_loss_min': valid_loss
             }, os.path.join(save_dir, f'e_{e+1}_checkpoint.pt'))
-            valid_loss_min = valid_loss
 
 
 def main():
-    from src.resnet import ResNet
-    from torch import nn
-    from torch.optim import Adam
-
-    # set up the model
-    model = ResNet(TRAIN.in_ch, TRAIN.num_cls, TRAIN.num_layers).to(TRAIN.device)
-    optimizer = Adam(model.parameters(), lr=TRAIN.learning_rate)
-    criterion = nn.CrossEntropyLoss()
-
+    from torchvision.transforms import Compose
+    from src.dataloaders import get_dataloaders, GetLuptitudes, ConcatenateWithColors
     # load the data
-    from src.dataloaders import NormalizeSCARLET, get_dataloaders
-    transform = NormalizeSCARLET(TRAIN.Q, TRAIN.S)
+    if TRAIN.concat_input:
+        num_chanels = TRAIN.in_ch + int(np.math.factorial(TRAIN.in_ch)/np.math.factorial(TRAIN.in_ch - 2)/np.math.factorial(2))
+        transforms = Compose([GetLuptitudes(TRAIN.Q, TRAIN.S), ConcatenateWithColors()])
+    else:
+        num_chanels = TRAIN.in_ch
+        transforms = GetLuptitudes(TRAIN.Q, TRAIN.S)
+
     train_loader, valid_loader = get_dataloaders(
         TRAIN.train_data_path,
         TRAIN.test_data_path,
         TRAIN.batch_size,
-        transform
+        transforms
     )
+
+    from src.resnet import ResNet
+    from torch import nn
+    from torch.optim import Adam
+    # set up the model
+    model = ResNet(num_chanels, TRAIN.num_cls, TRAIN.num_layers).to(TRAIN.device)
+    optimizer = Adam(model.parameters(), lr=TRAIN.learning_rate)
+    criterion = nn.CrossEntropyLoss()
 
     # train the model
     train(model, optimizer, criterion, train_loader, valid_loader)
