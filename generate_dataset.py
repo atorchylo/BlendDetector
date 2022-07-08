@@ -54,11 +54,15 @@ def save_data(gen):
         for i in range(sample_size[key]):
             batch = next(gen)
             imgs = batch['blend_images']
+            isolated = batch['isolated_images']
             meta = batch['blend_list']
             numGal = np.array([len(table) for table in meta])
             filename = f'{str(i).zfill(9)}.npz'
+            # add the blends with 0 galaxies by randomly erasing galaxy fluxes
+            idx_0_galaxy = np.random.rand(imgs.shape[0]) < 1/(DATA.max_number + 1)
+            imgs[idx_0_galaxy] = imgs[idx_0_galaxy] - isolated[idx_0_galaxy].sum(axis=1)
+            numGal[idx_0_galaxy] = 0
             np.savez(os.path.join(save_path, filename), imgs=imgs, nums=numGal)
-
             # print progress (we can't use tqdm because of BTK unfortunately)
             if (i + 1) % 100 == 0:
                 t_stemp = time.time() - t_stemp

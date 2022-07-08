@@ -9,6 +9,6 @@ def draw_confusion(targets, predictions, num_cls):
     sns.heatmap(confusion, fmt='g', annot=True, cbar=False,
                 xticklabels=range(1, num_cls + 1),
                 yticklabels=range(1, num_cls + 1))
-    plt.ylabel('Predicted class')
-    plt.xlabel('Actual class')
+    plt.xlabel('Predicted class')
+    plt.ylabel('Actual class')
     return fig

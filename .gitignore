@@ -1,9 +1,11 @@
 # custom added
+*.pt
+*.ipynb_checkpoints/
+*.ipynb
 jobs/
 *.sbatch
 *.sh
 .DS_Store
-MessingAround.ipynb
 .idea/
 data/NumberedGalaxyBlends/
 data/OneDegSq.fits

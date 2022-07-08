@@ -1,20 +1,47 @@
 import numpy as np
 import os
+import itertools
 
 import torch
 from torch.utils.data import Dataset, DataLoader
 
 
-class NormalizeSCARLET():
+class GetLuptitudes():
     """Transform for SCARLET image normalization"""
 
     def __init__(self, Q, S):
         self.Q = Q
         self.S = S
 
-    def __call__(self, batch):
-        batch = np.arcsinh(self.Q * batch / self.S) / self.Q
-        return batch
+    def __call__(self, imgs):
+        imgs = np.arcsinh(self.Q * imgs / self.S) / self.Q
+        return imgs
+
+class ChannelNormalized():
+
+    pass
+
+
+class GetColors():
+    """
+    Computes pairwise difference (colors) between the channels
+    By default computes n choose 2 number of colors where n is the number of input chanels
+    You can pass custom_permuataions, which is an iterable of tuples of indices that
+    will be used for color calculations.
+    """
+    def __init__(self, num_ch, custom_permutaions=None):
+        self.num_ch = num_ch
+        if custom_permutaions is None:
+            self.permutations = itertools.combinations(range(self.num_ch), 2)
+
+    def __call__(self, imgs):
+        colors = []
+        for (i, j) in self.permutations:
+            color = imgs[:, i, :, :] - imgs[:, j, :, :]
+            color = color.unsqueeze(1)
+            colors.append(color)
+        colors = torch.cat(colors, axis=1)
+        return colors
 
 
 class BlendDataset(Dataset):
@@ -44,7 +71,7 @@ class BlendDataset(Dataset):
             blend = self.transform(blend)
         # convert to tensor
         blend = torch.from_numpy(blend).float()
-        num = torch.from_numpy(num) - 1  # shift labels by 1 (because of CELoss convention)
+        num = torch.from_numpy(num)
         return blend, num
 
 

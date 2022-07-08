@@ -9,8 +9,8 @@ class DATA:
     file_batch = 4  # Number of images in a single generated file
     number_cpu = 1   # Number of cpu to parallelize across
     # Dataset size
-    train_batches = 20000
-    valid_batches = 2000
+    train_batches = 30000
+    valid_batches = 4000
 
 
 class TRAIN:
@@ -20,7 +20,7 @@ class TRAIN:
     # training constants
     epochs = 50
     learning_rate = 1e-4
-    batch_size = 16  # must be divisible by DATA.file_batch
+    batch_size = 32  # must be divisible by DATA.file_batch
     device = 'cuda'
     # network parameters
     in_ch = 6  # number of channels on the input
