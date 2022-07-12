@@ -33,6 +33,7 @@ class TRAIN:
     S = 2731
     # logging
     log_dir = '/scratch/users/torchylo/logs/NumberDetector/'
+    figures_path = '/figs'
 
 
 
