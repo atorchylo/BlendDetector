@@ -9,28 +9,24 @@ import btk.sampling_functions
 
 from config import DATA
 
-# Silence TQDM progress bar
-from tqdm import tqdm
-from functools import partialmethod
-tqdm.__init__ = partialmethod(tqdm.__init__, disable=True)
 
-
-def get_generator():
+def get_generator(max_number=DATA.max_number, stamp_size=DATA.stamp_size, max_shift=DATA.max_shift,
+                  batch_size=DATA.file_batch, cpus=DATA.number_cpu):
     """Generates BTK generator for drawing galaxy blends"""
     catalog = btk.catalog.CatsimCatalog.from_file(DATA.catalog_path)
     lsst = btk.survey.get_surveys('LSST')
     sampler = btk.sampling_functions.DefaultSampling(
-        max_number=DATA.max_number,
-        stamp_size=DATA.stamp_size,
-        maxshift=DATA.max_shift
+        max_number=max_number,
+        stamp_size=stamp_size,
+        maxshift=max_shift
     )
     generator = btk.draw_blends.CatsimGenerator(
         catalog,
         sampler,
         lsst,
-        batch_size=DATA.file_batch,
-        stamp_size=DATA.stamp_size,
-        cpus=DATA.number_cpu,
+        batch_size=batch_size,
+        stamp_size=stamp_size,
+        cpus=cpus,
         add_noise='all',
         verbose=False
     )
@@ -70,9 +66,12 @@ def save_data(gen):
                 print(f'[{i+1}/{sample_size[key]}] images for {key}, time/100 {t_stemp:.3f}, time overall {t_overall:.3f}')
 
 
-
-
 if __name__ == "__main__":
+    # Silence TQDM progress bar
+    from tqdm import tqdm
+    from functools import partialmethod
+    tqdm.__init__ = partialmethod(tqdm.__init__, disable=True)
+
     print(f"Saving data to: {DATA.dataset_location}")
     print("Starting generation of blends:")
     print(f"# TRAIN images: {DATA.train_batches * DATA.file_batch}")
