@@ -79,10 +79,10 @@ if __name__ == '__main__':
     parser.add_argument("--model_path", type=str, required=True,
                         help="Path to the model to evaluate")
 
-    parser.add_argument("--data_path", type=str, required=True, default=TRAIN.test_data_path,
+    parser.add_argument("--data_path", type=str, default=TRAIN.test_data_path,
                         help="Path to the data to use for evaluation")
 
-    parser.add_argument("--save_path", type=str, required=True, default=TRAIN.figures_path,
+    parser.add_argument("--save_path", type=str, default=TRAIN.figures_path,
                         help="Where to save resultant visualizations")
 
     parser.add_argument("--device", type=str, default=TRAIN.device,

@@ -16,8 +16,8 @@ class DATA:
 
 class TRAIN:
     # datasets for the train loop
-    train_data_path = '/scratch/users/torchylo/NumberedGalaxyBlends_v1.0/train'
-    test_data_path = '/scratch/users/torchylo/NumberedGalaxyBlends_v1.0/valid'
+    train_data_path = '/scratch/users/torchylo/NumberedGalaxyBlends_v1.0/train/'
+    test_data_path = '/scratch/users/torchylo/NumberedGalaxyBlends_v1.0/valid/'
     # training constants
     epochs = 50
     learning_rate = 1e-4
@@ -33,7 +33,7 @@ class TRAIN:
     S = 2731
     # logging
     log_dir = '/scratch/users/torchylo/logs/NumberDetector/'
-    figures_path = '/figs'
+    figures_path = 'figs/'
 
 
 
