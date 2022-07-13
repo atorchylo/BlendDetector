@@ -6,7 +6,8 @@ import numpy as np
 
 
 from src.resnet import ResNet
-from metrics.utils import draw_confusion, accuracy
+from metrics.utils import accuracy, draw_confusion, draw_probability_spread, \
+    visualize_missclassified_example, draw_average_prob_distribution, draw_thresholding_graph
 from config import DATA, TRAIN
 from src.dataloaders import GetLuptitudes, BlendDataset, collate_fn
 from torch.utils.data import DataLoader
@@ -29,22 +30,29 @@ def sep_detection(dataloader, sigma_noise=1.5):
     return np.array(number_galaxies)
 
 
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
+
+
 def model_detection(dataloader, model, device):
-    predictions, targets = [], []
+    probabilities, targets = [], []
     model.eval()
     with torch.no_grad():
         for imgs, nums in tqdm(dataloader, desc="running model predictions"):
             input = GetLuptitudes()(imgs).to(device)
-            output = model(input).argmax(1).cpu().numpy()
-            predictions.extend(output)
+            output = model(input).cpu().numpy()
+            prob = softmax(output)
+            probabilities.extend(prob)
             targets.extend(nums)
-    return np.array(predictions), np.array(targets)
+    return np.array(probabilities), np.array(targets)
 
 
 def run_evaluation(args):
     # get data
     dataset = BlendDataset(args.data_path, transform=None)
     dataloader = DataLoader(dataset, batch_size=args.batch_size//dataset.file_batch, collate_fn=collate_fn, shuffle=False)
+
     # initialize
     device = torch.device(args.device)
     data = torch.load(args.model_path, map_location=device)
@@ -53,7 +61,8 @@ def run_evaluation(args):
     model = model.to(device)
 
     # run detection
-    model_predictions, num_galaxies = model_detection(dataloader, model, device)
+    model_probabilities, num_galaxies = model_detection(dataloader, model, device)
+    model_predictions = model_probabilities.argmax(1)
     sep_predictions = sep_detection(dataloader, sigma_noise=1.5)
 
     # visualize
@@ -67,6 +76,23 @@ def run_evaluation(args):
     print("[Confusion] Saving to " + str(os.path.join(args.save_path, 'sep_confusion.png')))
     fig2 = draw_confusion(num_galaxies, sep_predictions, TRAIN.num_cls, "Source Extractor detection")
     fig2.savefig(os.path.join(args.save_path, 'sep_confusion.png'))
+    print("[Prob Spread] Saving to " + str(os.path.join(args.save_path, 'probability_spread.png')))
+    fig3 = draw_probability_spread(num_galaxies, model_probabilities)
+    fig3.savefig(os.path.join(args.save_path, 'probability_spread.png'))
+    print("[Prob Spread] Saving to " + str(os.path.join(args.save_path, 'probability_spread.png')))
+    fig3 = draw_probability_spread(num_galaxies, model_probabilities)
+    fig3.savefig(os.path.join(args.save_path, 'probability_spread.png'))
+    print("[Prob Average] Saving to " + str(os.path.join(args.save_path, 'probability_average.png')))
+    fig4 = draw_average_prob_distribution(num_galaxies, model_predictions, model_probabilities)
+    fig4.savefig(os.path.join(args.save_path, f'probability_average.png'))
+    print("[Prob Thresholding] Saving to " + str(os.path.join(args.save_path, 'probability_thresh.png')))
+    fig5 = draw_thresholding_graph(num_galaxies, model_predictions, model_probabilities)
+    fig5.savefig(os.path.join(args.save_path, f'probability_thresh.png'))
+    print("[Example Distribution] Saving to " + str(os.path.join(args.save_path, 'example_<x>.png')))
+    for i in range(1, 10):
+        fig = visualize_missclassified_example(num_galaxies, model_predictions, model_probabilities, dataset)
+        fig.savefig(os.path.join(args.save_path, f'example_{i}.png'))
+
 
 
 if __name__ == '__main__':
