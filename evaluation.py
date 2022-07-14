@@ -41,7 +41,7 @@ def model_detection(dataloader, model, device):
     with torch.no_grad():
         for imgs, nums in tqdm(dataloader, desc="running model predictions"):
             input = GetLuptitudes()(imgs).to(device)
-            output = model(input).cpu().numpy()
+            output = model(input).detach().cpu().numpy()
             prob = softmax(output)
             probabilities.extend(prob)
             targets.extend(nums)
@@ -55,10 +55,9 @@ def run_evaluation(args):
 
     # initialize
     device = torch.device(args.device)
-    data = torch.load(args.model_path, map_location=device)
     model = ResNet(TRAIN.in_ch, TRAIN.num_cls, TRAIN.num_layers)
-    model.load_state_dict(data['model_state_dict'])
-    model = model.to(device)
+    model.load_state_dict(torch.load(args.model_path, map_location=device)['model_state_dict'])
+    model.to(device)
 
     # run detection
     model_probabilities, num_galaxies = model_detection(dataloader, model, device)

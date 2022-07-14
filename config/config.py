@@ -22,7 +22,7 @@ class TRAIN:
     epochs = 50
     learning_rate = 1e-4
     batch_size = 48  # must be divisible by DATA.file_batch
-    device = 'cuda'
+    device = 'cpu'
     # network parameters
     in_ch = 6  # number of channels of the image
     concat_input = False
